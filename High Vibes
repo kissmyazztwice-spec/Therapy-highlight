@@ -1,0 +1,350 @@
+echo "# Therapy-highlight" >> README.md
+git init
+git add README.md
+git commit -m "first commit"
+git branch -M main
+git remote add origin https://github.com/kissmyazztwice-spec/Therapy-highlight.git
+git push -u origin main
+`javascript
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Calendar, MessageCircle, Video, User, Clock, Send, Phone } from 'lucide-react';
+
+export default function DodgeVibeSessions() {
+  const [activeTab, setActiveTab] = useState('profile');
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedTime, setSelectedTime] = useState(null);
+  const [message, setMessage] = useState('');
+  const [inCall, setInCall] = useState(false);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  // Mock data - replace with real Firebase queries
+  const earnings = { available: 1250, pending: 350, total: 8420 };
+  const availableSlots = [
+    { date: 'Dec 18', times: ['10:00 AM', '2:00 PM', '4:00 PM'] },
+    { date: 'Dec 19', times: ['11:00 AM', '1:00 PM', '3:00 PM'] },
+  ];
+
+  // Book session function
+  const bookSession = async () => {
+    setLoading(true);
+    try {
+      // Call Stripe API to create payment
+      const response = await fetch('/api/create-booking', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          date: selectedDate,
+          time: selectedTime,
+          amount: 25
+        })
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        alert('Booking confirmed! Check your email.');
+      }
+    } catch (error) {
+      alert('Booking failed. Try again.');
+    }
+    setLoading(false);
+  };
+
+  // Start video call
+  const startCall = async () => {
+    try {
+      const response = await fetch('/api/video-token');
+      const data = await response.json();
+      // Initialize Twilio Video with token
+      setInCall(true);
+    } catch (error) {
+      alert('Could not start call');
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-pink-500 via-purple-500 to-blue-500">
+      <style jsx global>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-20px); }
+        }
+        .animate-float { animation: float 4s ease-in-out infinite; }
+      `}</style>
+
+      {/* Floating Emojis */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-20 left-10 text-6xl animate-float">✨</div>
+        <div className="absolute top-40 right-20 text-5xl animate-float" style={{animationDelay: '1s'}}>🔥</div>
+        <div className="absolute bottom-40 left-20 text-6xl animate-float" style={{animationDelay: '0.5s'}}>💫</div>
+      </div>
+
+      {/* Navigation */}
+      <div className="relative z-20 bg-white/10 backdrop-blur-2xl border-b-2 border-white/20">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex justify-center gap-4 flex-wrap">
+          {['profile', 'booking', 'messages', 'video', 'earnings'].map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-6 py-3 rounded-2xl font-bold text-sm md:text-lg transition-all ${
+                activeTab === tab
+                  ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-2xl'
+                  : 'bg-white/20 text-white hover:bg-white/30'
+              }`}
+            >
+              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="relative z-10 max-w-6xl mx-auto px-4 md:px-6 py-8">
+        {/* PROFILE */}
+        {activeTab === 'profile' && (
+          <div className="bg-white/10 backdrop-blur-2xl rounded-3xl p-6 md:p-8 border-2 border-white/30">
+            <div className="flex justify-center mb-6">
+              <div className="w-32 h-32 md:w-48 md:h-48 rounded-full bg-gradient-to-br from-purple-400 to-blue-400 p-2">
+                <div className="w-full h-full rounded-full bg-purple-700 flex items-center justify-center">
+                  <span className="text-white text-5xl md:text-7xl font-black">D</span>
+                </div>
+              </div>
+            </div>
+            <h1 className="text-3xl md:text-5xl font-black text-white text-center mb-2">DODG3 VIP3R</h1>
+            <p className="text-xl md:text-2xl text-white/90 text-center">@dodg3vip3r</p>
+            <div className="bg-gradient-to-r from-pink-500/30 to-purple-500/30 rounded-2xl p-6 mt-6 border-2 border-white/20">
+              <p className="text-2xl md:text-3xl font-bold text-white text-center">
+                "Never Dodge ?s — I only speak facts with divine love & experience! 💖✨"
+              </p>
+            </div>
+            <div className="grid grid-cols-3 gap-4 mt-6">
+              <div className="bg-white/10 rounded-2xl p-4 text-center">
+                <div className="text-3xl md:text-5xl font-black text-white">42</div>
+                <div className="text-white/80 text-sm md:text-lg">Sessions</div>
+              </div>
+              <div className="bg-white/10 rounded-2xl p-4 text-center">
+                <div className="text-3xl md:text-5xl font-black text-white">8</div>
+                <div className="text-white/80 text-sm md:text-lg">This Month</div>
+              </div>
+              <div className="bg-white/10 rounded-2xl p-4 text-center">
+                <div className="text-3xl md:text-5xl font-black text-white">4.9</div>
+                <div className="text-white/80 text-sm md:text-lg">Rating</div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* BOOKING */}
+        {activeTab === 'booking' && (
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="bg-white/10 backdrop-blur-2xl rounded-3xl p-6 md:p-8 border-2 border-white/30">
+              <h2 className="text-2xl md:text-3xl font-black text-white mb-6">Select Time</h2>
+              {availableSlots.map((slot, idx) => (
+                <div key={idx} className="mb-6">
+                  <h3 className="text-white font-bold text-xl mb-3">{slot.date}</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    {slot.times.map((time, tidx) => (
+                      <button
+                        key={tidx}
+                        onClick={() => { setSelectedDate(slot.date); setSelectedTime(time); }}
+                        className={`p-4 rounded-xl font-bold transition-all ${
+                          selectedDate === slot.date && selectedTime === time
+                            ? 'bg-gradient-to-r from-green-400 to-emerald-400 text-black'
+                            : 'bg-white/20 text-white hover:bg-white/30'
+                        }`}
+                      >
+                        {time}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="bg-white/10 backdrop-blur-2xl rounded-3xl p-6 md:p-8 border-2 border-white/30">
+              <h2 className="text-2xl md:text-3xl font-black text-white mb-6">Confirm</h2>
+              {selectedDate && selectedTime ? (
+                <div>
+                  <div className="bg-white/10 rounded-2xl p-6 mb-6">
+                    <p className="text-white text-lg mb-2">📅 {selectedDate}</p>
+                    <p className="text-white text-lg mb-2">🕐 {selectedTime}</p>
+                    <p className="text-white text-lg mb-2">⏱️ 30 minutes</p>
+                    <p className="text-white text-lg">💰 $25</p>
+                  </div>
+                  <button
+                    onClick={bookSession}
+                    disabled={loading}
+                    className="w-full bg-gradient-to-r from-green-400 to-emerald-400 text-black font-black py-6 rounded-2xl text-xl disabled:opacity-50"
+                  >
+                    {loading ? 'Processing...' : 'Confirm Booking'}
+                  </button>
+                </div>
+              ) : (
+                <p className="text-white/60 text-center py-20">Select a time</p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* MESSAGES */}
+        {activeTab === 'messages' && (
+          <div className="bg-white/10 backdrop-blur-2xl rounded-3xl overflow-hidden border-2 border-white/30">
+            <div className="bg-gradient-to-r from-pink-600 to-purple-600 p-6 flex items-center gap-4">
+              <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-white flex items-center justify-center">
+                <span className="text-purple-600 text-xl md:text-2xl font-black">D</span>
+              </div>
+              <div>
+                <h3 className="text-white font-black text-xl md:text-2xl">DODG3 VIP3R</h3>
+                <p className="text-white/90 text-sm md:text-base">Online now</p>
+              </div>
+            </div>
+            <div className="h-96 p-4 md:p-6 overflow-y-auto">
+              <div className="bg-white/20 rounded-2xl p-4 max-w-md">
+                <p className="text-white">Welcome! How can I help elevate you today? 🔥</p>
+              </div>
+            </div>
+            <div className="p-4 md:p-6 bg-white/5 border-t-2 border-white/20">
+              <div className="flex gap-3">
+                <input
+                  type="text"
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Type message..."
+                  className="flex-1 px-4 py-3 md:px-6 md:py-4 rounded-2xl bg-white/20 text-white placeholder-white/60 border-2 border-white/30"
+                />
+                <button className="bg-gradient-to-r from-pink-500 to-purple-500 text-white p-3 md:px-8 md:py-4 rounded-2xl">
+                  <Send className="w-5 h-5 md:w-6 md:h-6" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* VIDEO */}
+        {activeTab === 'video' && (
+          <div className="bg-white/10 backdrop-blur-2xl rounded-3xl overflow-hidden border-2 border-white/30">
+            {!inCall ? (
+              <div className="p-8 md:p-12 text-center">
+                <div className="w-32 h-32 md:w-48 md:h-48 mx-auto mb-8 rounded-full bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center">
+                  <Video className="w-16 h-16 md:w-24 md:h-24 text-white" />
+                </div>
+                <h2 className="text-3xl md:text-4xl font-black text-white mb-4">Start Live Session</h2>
+                <button
+                  onClick={startCall}
+                  className="bg-gradient-to-r from-green-400 to-emerald-400 text-black font-black px-8 md:px-12 py-4 md:py-6 rounded-2xl text-xl md:text-2xl"
+                >
+                  Start Video Call
+                </button>
+              </div>
+            ) : (
+              <div>
+                <div className="relative bg-gradient-to-br from-purple-900 to-blue-900 aspect-video flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="w-24 h-24 md:w-32 md:h-32 mx-auto mb-6 rounded-full bg-purple-700 flex items-center justify-center">
+                      <span className="text-white text-4xl md:text-5xl font-black">D</span>
+                    </div>
+                    <p className="text-white text-2xl md:text-3xl font-black">Connected</p>
+                  </div>
+                </div>
+                <div className="p-6 bg-gradient-to-r from-pink-600 to-purple-600 flex justify-center gap-6">
+                  <button
+                    onClick={() => setInCall(false)}
+                    className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-red-500 flex items-center justify-center"
+                  >
+                    <Phone className="w-6 h-6 md:w-8 md:h-8 text-white transform rotate-135" />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* EARNINGS */}
+        {activeTab === 'earnings' && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-gradient-to-br from-green-500/40 to-emerald-500/40 backdrop-blur-2xl rounded-3xl p-4 md:p-6 border-2 border-white/30">
+                <p className="text-white/80 text-sm md:text-lg mb-2">Available</p>
+                <p className="text-3xl md:text-5xl font-black text-white">${earnings.available}</p>
+              </div>
+              <div className="bg-gradient-to-br from-yellow-500/40 to-orange-500/40 backdrop-blur-2xl rounded-3xl p-4 md:p-6 border-2 border-white/30">
+                <p className="text-white/80 text-sm md:text-lg mb-2">Pending</p>
+                <p className="text-3xl md:text-5xl font-black text-white">${earnings.pending}</p>
+              </div>
+              <div className="bg-gradient-to-br from-blue-500/40 to-indigo-500/40 backdrop-blur-2xl rounded-3xl p-4 md:p-6 border-2 border-white/30">
+                <p className="text-white/80 text-sm md:text-lg mb-2">This Month</p>
+                <p className="text-3xl md:text-5xl font-black text-white">$680</p>
+              </div>
+              <div className="bg-gradient-to-br from-purple-500/40 to-pink-500/40 backdrop-blur-2xl rounded-3xl p-4 md:p-6 border-2 border-white/30">
+                <p className="text-white/80 text-sm md:text-lg mb-2">Total</p>
+                <p className="text-3xl md:text-5xl font-black text-white">${earnings.total}</p>
+              </div>
+            </div>
+            <div className="bg-white/10 backdrop-blur-2xl rounded-3xl p-6 md:p-8 border-2 border-white/30">
+              <h2 className="text-2xl md:text-3xl font-black text-white mb-6">Withdraw</h2>
+              <input
+                type="number"
+                placeholder="Amount"
+                className="w-full px-6 py-4 rounded-2xl bg-white/20 text-white placeholder-white/50 border-2 border-white/30 mb-4 text-xl md:text-2xl"
+              />
+              <button className="w-full bg-gradient-to-r from-green-400 to-emerald-400 text-black font-black py-4 md:py-5 rounded-2xl text-lg md:text-xl">
+                Withdraw to Stripe
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+```
+
+---
+
+## 🔥 NEXT: CREATE API ROUTES
+
+Create folder `app/api/create-booking/route.js`:
+
+```javascript
+import Stripe from 'stripe';
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+export async function POST(request) {
+  try {
+    const { date, time, amount } = await request.json();
+    
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: amount * 100,
+      currency: 'usd',
+      metadata: { date, time }
+    });
+    
+    return Response.json({ success: true, clientSecret: paymentIntent.client_secret });
+  } catch (error) {
+    return Response.json({ success: false, error: error.message }, { status: 500 });
+  }
+}
+```
+
+Create `app/api/video-token/route.js`:
+
+```javascript
+import twilio from 'twilio';
+
+export async function GET() {
+  const AccessToken = twilio.jwt.AccessToken;
+  const VideoGrant = AccessToken.VideoGrant;
+  
+  const token = new AccessToken(
+    process.env.TWILIO_ACCOUNT_SID,
+    process.env.TWILIO_API_KEY_SID,
+    process.env.TWILIO_API_KEY_SECRET
+  );
+  
+  token.identity = 'user-' + Math.random();
+  const videoGrant = new VideoGrant({ room: 'dodge-session' });
+  token.addGrant(videoGrant);
+  
+  return Response.json({ token: token.toJwt() });
+}
+```
