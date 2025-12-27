@@ -1,0 +1,79 @@
+
+// ... [Existing imports remain here]
+const express = require('express');
+// ... [Existing config and helper functions remain here]
+
+const app = express();
+app.use(express.json());
+
+// *** New line to serve static files (like index.html) ***
+app.use(express.static(__dirname)); 
+
+// ... [The rest of your existing orchestrator logic and routes remain here] ...
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Orchestrator UI</title>
+    <!-- Bootstrap CSS for a nice look -->
+    <link href="cdn.jsdelivr.net" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <style>
+        body { padding: 20px; }
+        #responseArea { margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mb-4">AI Orchestrator Chat</h1>
+
+        <div class="mb-3">
+            <label for="modelSelect" class="form-label">Select Model:</label>
+            <select id="modelSelect" class="form-select">
+                <option value="gemini">Gemini</option>
+                <option value="assistant">Local Assistant</option>
+            </select>
+        </div>
+        
+        <div class="mb-3">
+            <label for="promptInput" class="form-label">Enter your prompt:</label>
+            <textarea id="promptInput" class="form-control" rows="3" placeholder="Type your prompt here..."></textarea>
+        </div>
+        
+        <button onclick="sendMessage()" class="btn btn-primary">Send Message</button>
+        
+        <div id="responseArea">
+            <!-- Responses will appear here -->
+        </div>
+    </div>
+
+    <script>
+        async function sendMessage() {
+            const model = document.getElementById('modelSelect').value;
+            const prompt = document.getElementById('promptInput').value;
+            const responseArea = document.getElementById('responseArea');
+
+            responseArea.innerHTML = '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div> Loading...';
+
+            try {
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ model, prompt })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || response.statusText);
+                }
+
+                const data = await response.json();
+                responseArea.innerHTML = `<p><strong>Model:</strong> ${data.model}</p><p><strong>Response Text:</strong> ${data.text}</p><p><strong>Total Tokens:</strong> ${data.usage.totalTokens}</p>`;
+            } catch (error) {
+                responseArea.innerHTML = `<div class="alert alert-danger" role="alert">Error: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>
+
